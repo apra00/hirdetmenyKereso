@@ -1,5 +1,4 @@
 import requests
-import yfinance as yf
 import streamlit as st
 import urllib
 import base64
