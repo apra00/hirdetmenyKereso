@@ -71,6 +71,10 @@ for index, hirdetmeny in enumerate(hirdetmenyek):
         terulet = attribs["terulet1"]
         kat = attribs["muvelesi_ag1"]
         hanyad = attribs["tulhanyad1"]
+        if hanyad != None:
+            szazalek = round(int(hanyad.split("/")[0])/int(hanyad.split("/")[1])*100, 1)
+            if szazalek < 100:
+                hanyad = hanyad + " ≈ " + str(szazalek) + "%"
         csat = csatolmanyHost+str(hirdetmeny["csatolmanyok"][0]["id"])
         csatNev = hirdetmeny["csatolmanyok"][0]["fajlNev"]
     except KeyError as e:
