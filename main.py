@@ -17,8 +17,8 @@ st.set_page_config(layout='wide')
 st.title("Magyarország hirdetménykereső")
 st.markdown("---")
 st.subheader("Kereső")
-inputForrasInt = st.text_input("Forrás Intézmény (vesszővel elválasztva többet is megadhat)",placeholder='Gyöngyöstarján, Gyöngyöspata',value='Gyöngyöstarján, Gyöngyöspata').replace(", ", ",").split(',')
-
+inputForrasInt = st.text_input("Forrás Intézmény (vesszővel elválasztva több is megadható)",placeholder='Gyöngyöstarján',value='Gyöngyöstarján').replace(", ", ",").split(',')
+print(inputForrasInt)
 forrasintezmenyek = inputForrasInt
 host = "https://hirdetmenyek.gov.hu/api/hirdetmenyek/reszletezo/"
 uiHost = "https://hirdetmenyek.gov.hu/reszletezo/"
@@ -27,15 +27,20 @@ csatolmanyHost = "https://hirdetmenyek.gov.hu/api/csatolmany/"
 hirdetmenyek = []
 ids = []
 
-progressbar = st.progress(0)
+progressbarIntezmeny = st.progress(0)
+progressbarHirdetes = st.progress(0)
 
-for forrasintezmeny in forrasintezmenyek:
+for indexIntezmeny, forrasintezmeny in enumerate(forrasintezmenyek):
     link = "https://hirdetmenyek.gov.hu/api/hirdetmenyek?order=desc&targy=&kategoria=&forrasIntezmenyNeve="+urllib.parse.quote_plus(forrasintezmeny)+"&ugyiratSzamIktatasiSzam=&telepules=&nev=&idoszak=&adottNap=&szo=&pageIndex=0&pageSize=50&sort=kifuggesztesNapja"
     jsonData = json.loads(urlopen(link).read())
+    progressbarIntezmeny.progress(1/len(forrasintezmenyek)*indexIntezmeny)
 
-    for row in jsonData["rows"]:
+    for indexHirdetes, row in enumerate(jsonData["rows"]):
         hirdetmenyek.append(json.loads(urlopen(host+str(row["id"])).read()))
         ids.append(str(row["id"]))
+        progressbarHirdetes.progress(1/len(jsonData["rows"])*indexHirdetes)
+    
+
 
 df = pd.DataFrame(columns=["id", "idUrl", "telepules", "kifuggesztve", "lejarat", "hrsz", "ar", "terulet", "kat", "hanyad", "csat", "csatNev"])
 for index, hirdetmeny in enumerate(hirdetmenyek):
@@ -56,7 +61,6 @@ for index, hirdetmeny in enumerate(hirdetmenyek):
 
         id = str(ids[index])
         idUrl = uiHost+str(ids[index])
-        print(id)
         telepules = attribs["telepules1"]
         kifuggesztve = datetime.datetime.strptime(hirdetmeny["hirdetmenyDTO"]["kifuggesztesNapja"], "%Y-%m-%dT%H:%M:%S.%f%z").strftime("%Y-%m-%d")
         lejarat = datetime.datetime.strptime(hirdetmeny["hirdetmenyDTO"]["lejaratNapja"], "%Y-%m-%dT%H:%M:%S.%f%z").strftime("%Y-%m-%d")
@@ -74,7 +78,6 @@ for index, hirdetmeny in enumerate(hirdetmenyek):
     
     newRow = pd.DataFrame({'id':id, 'idUrl':idUrl, 'telepules':telepules, 'kifuggesztve':kifuggesztve, 'lejarat':lejarat, 'hrsz':hrsz, 'ar':ar, 'terulet':terulet, 'kat':kat, 'hanyad':hanyad, 'csat':csat, "csatNev":csatNev}, index=[0])
     df = pd.concat([newRow,df.loc[:]]).reset_index(drop=True)
-    progressbar.progress(1/len(hirdetmenyek)*index)
 
 df['csat'] = df.apply(lambda x: make_clickable(x['csat'], x['csatNev']), axis=1)
 df['id'] = df.apply(lambda x: make_clickable(x['idUrl'], x['id']), axis=1)
@@ -82,6 +85,7 @@ df['id'] = df.apply(lambda x: make_clickable(x['idUrl'], x['id']), axis=1)
 df.pop("idUrl")
 df.pop("csatNev")
 
-progressbar.empty()
+progressbarIntezmeny.empty()
+progressbarHirdetes.empty()
 
 html = st.write(df.to_html(render_links=True, escape=False), unsafe_allow_html=True)
