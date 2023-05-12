@@ -17,7 +17,7 @@ st.set_page_config(layout='wide')
 st.title("Magyarország hirdetménykereső")
 st.markdown("---")
 st.subheader("Kereső")
-inputForrasInt = st.text_input("Forrás Intézmény (vesszővel elválasztva több is megadható)",placeholder='Gyöngyöstarján',value='Gyöngyöstarján').replace(", ", ",").split(',')
+inputForrasInt = st.text_input("Forrás Intézmény (vesszővel elválasztva több is megadható)",placeholder='Gyöngyöstarján, Gyöngyöspata',value='Gyöngyöstarján, Gyöngyöspata').replace(", ", ",").split(',')
 print(inputForrasInt)
 forrasintezmenyek = inputForrasInt
 host = "https://hirdetmenyek.gov.hu/api/hirdetmenyek/reszletezo/"
